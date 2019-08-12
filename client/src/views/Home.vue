@@ -45,12 +45,12 @@
         <p class="emph">Your redirect information has been staged. There are now three things you need to do to make this information active.</p>
         <p class="emph">
           First, within 10 minutes, you need to add a TXT record to your domain with the value
-          <ClipboardCopy :str="'redirectr-' + uuid"><strong>redirectr-{{uuid}}</strong></ClipboardCopy>. RedirectR will watch for this record, and once it
+          <strong><ClipboardCopy :str="'redirectr-' + uuid"/></strong>. RedirectR will watch for this record, and once it
           finds it (thus proving that you have control of the domain) it will make the matching staged record active.
         </p>
         <p class="emph">
           Second, you need to point your old domain's 'A' records to point to this service at
-          <ClipboardCopy :str="thisIp"><strong>{{ thisIp }}</strong></ClipboardCopy>
+          <strong><ClipboardCopy :str="thisIp"/></strong>
         </p>
         <p class="emph">
           Third, test if everything works.
