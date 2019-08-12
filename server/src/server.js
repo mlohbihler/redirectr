@@ -1,11 +1,11 @@
 /**
  * Copyright Serotonin Software 2019
  */
-// const bodyParser = require('body-parser')
-// const compression = require('compression')
+const bodyParser = require('body-parser')
+const compression = require('compression')
 const express = require('express')
 const fs = require('fs')
-// const helmet = require('helmet')
+const helmet = require('helmet')
 const http = require('http')
 const https = require('https')
 const morgan = require('morgan')
@@ -14,6 +14,7 @@ const RateLimit = require('express-rate-limit')
 const rfs = require('rotating-file-stream')
 const redirector = require('./redirector')
 const stateRefresher = require('./stateRefresher')
+const ui = require('./ui')
 
 module.exports = options => {
   const { db, logger } = options
@@ -31,8 +32,29 @@ module.exports = options => {
   // // Assume that we're behind a load balancer.
   // app.set('trust proxy', true)
 
-  // app.use(helmet())
-  // app.use(compression())
+  // Prevent referer headers in subsequent requests.
+  app.use(helmet.referrerPolicy({ policy: 'origin' }))
+
+  app.use(helmet())
+  app.use(compression())
+  app.use(bodyParser.json())
+
+  // CORS: enable cross domain request handling.
+  if (process.env.NODE_ENV === 'production') {
+    // ... unless we're in production. No need for it here.
+    logger.info('Starting production instance, no CORS')
+  } else {
+    logger.info('Enabling CORS')
+    app.use(function(req, res, next) {
+      res.set({
+        'Access-Control-Allow-Origin': req.headers.origin,
+        'Access-Control-Allow-Credentials': true,
+        'Access-Control-Allow-Headers': 'Accept,Cache-Control,Content-Type,Cookie,Origin,X-Content-Type,X-Requested-With,X-XSRF-Token',
+        'Access-Control-Allow-Methods': 'DELETE,GET,OPTIONS,POST,PUT,PATCH'
+      })
+      next()
+    })
+  }
 
   // Rate limiting
   app.use('/api/', new RateLimit({
@@ -55,6 +77,7 @@ module.exports = options => {
 
   // Middleware to inject the log and state into the request object.
   app.use((req, res, next) => {
+    req.db = db
     req.logger = logger
     req.state = options.state
     next()
@@ -62,6 +85,7 @@ module.exports = options => {
 
   // Set the routes
   app.use('*', redirector)
+  app.use('/ui', ui)
   app.use(express.static('static'))
   app.get('*', (req, res, next) => {
     // Route requests for specific URLs to the index.html file if they were requested

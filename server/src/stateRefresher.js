@@ -28,34 +28,34 @@ async function load(opts) {
   const max = lastLoadTime
 
   logger.debug(`Deleting expired DNS verifications`)
-  const delResult = await db.query(`
-    DELETE FROM redirects WHERE redirect_id IN (
-      SELECT redirect_id FROM dns_verifications WHERE expiry < NOW()
-    )
-  `)
+  const delResult = await db.query(`DELETE FROM staged_redirects WHERE expiry < NOW()`)
   if (delResult.rowCount > 0) {
     logger.info(`Deleted ${delResult.rowCount} expired DNS verifications`)
   }
 
+  logger.debug(`Testing all active DNS verifications`)
+  db.query(`
+    SELECT id, code, hostname, target_url, redirect_type, append_original_url
+    FROM staged_redirects
+    WHERE id IN (SELECT MIN(id) FROM staged_redirects GROUP BY hostname)
+    LIMIT 50`,
+    (err, rs) => {
+      if (err) {
+        logger.error(err)
+      } else {
+        rs.rows.forEach(row => doDNSVerification(opts, row))
+      }
+    })
+
   logger.debug(`Loading state since ${min} until ${max}`)
   const selResult = await db.query(`
-    SELECT r.redirect_id, r.hostname, r.target_url, r.redirect_type, r.append_original_url,
-        r.active AS redirect_active,
-      u.active AS user_active,
-      d.code
-    FROM redirects r
-      JOIN users u ON r.user_id = u.user_id
-      LEFT JOIN dns_verifications d ON r.redirect_id = d.redirect_id
-    WHERE (u.modified > $1 AND u.modified <= $2)
-      OR (r.modified > $1 AND r.modified <= $2)
-      OR d.code IS NOT NULL
-    `, [min, max])
+    SELECT hostname, target_url, redirect_type, append_original_url, active
+    FROM redirects
+    WHERE modified > $1 AND modified <= $2`,
+    [min, max])
 
   selResult.rows.forEach(row => {
-    if (row.code) {
-      // Do a DNS verification
-      doDNSVerification(opts, row)
-    } else if (row.user_active && row.redirect_active) {
+    if (row.active) {
       logger.info(`Adding or updating redirect for ${row.hostname}`)
       hostMap[row.hostname] = {
         target: row.target_url,
@@ -74,20 +74,20 @@ async function load(opts) {
 
 function doDNSVerification(opts, row) {
   const { db, logger } = opts
-  const { code, hostname, redirect_id } = row
+  const { append_original_url, code, hostname, id, redirect_type, target_url } = row
 
   logger.debug(`Doing DNS verification for ${hostname}`)
-  dns.resolveTxt(`_redirectr.${hostname}`, async (err, result) => {
+  dns.resolveTxt(`${hostname}`, async (err, result) => {
     if (err) {
       // We can ignore this. Errors are returned when entries are not found.
-      logger.info(`DNS query returned an error for ${hostname}`, err)
+      logger.info(`DNS query returned an error for ${hostname}: `, err)
     } else if (isArray(result)) {
       let found = false
       result.forEach(e => {
         if (isArray(e)) {
           // This should always be the case. All entries of this array should be strings.
           result.forEach(ee => {
-            if (ee.toString() === code) {
+            if (ee.toString() === 'redirectr-' + code) {
               found = true
             }
           })
@@ -98,8 +98,17 @@ function doDNSVerification(opts, row) {
 
       if (found) {
         logger.info(`DNS verified for ${hostname}`)
-        await db.query(`DELETE FROM dns_verifications WHERE redirect_id = $1`, [redirect_id])
-        await db.query(`UPDATE redirects SET modified = NOW() WHERE redirect_id = $1`, [redirect_id])
+
+        // Upsert the redirect table
+        await db.query(`
+          INSERT INTO redirects (hostname, target_url, redirect_type, append_original_url)
+          VALUES ($1, $2, $3, $4)
+          ON CONFLICT (hostname) DO UPDATE SET target_url = $2, redirect_type = $3,
+            append_original_url = $4, modified = NOW()`,
+          [hostname, target_url, redirect_type, append_original_url])
+
+        // Delete the from staged redirect table
+        await db.query(`DELETE FROM staged_redirects WHERE id = $1`, [id])
       } else {
         logger.info(`DNS not verified for ${hostname}`)
       }

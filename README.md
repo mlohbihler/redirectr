@@ -11,21 +11,30 @@ grant all privileges on database <name> to <user>;
 
 Then, update your .env file with the name (PGDATABASE), user (PGUSER), and password (PGPASSWORD) you used.
 
-Create a client:
-```sql
-INSERT INTO users (email) VALUES ('poly@andry.com');
-```
 Create some redirects:
 ```sql
-INSERT INTO redirects (user_id, hostname, target_url, redirect_type, append_original_url) VALUES
-  (<userId>, 'dead.com', 'living.com', '301', true),
-  (<userId>, 'old.com', 'new.com', '302', false),
-  (<userId>, 'tired.com', 'wired.com', 'location', false);
+INSERT INTO redirects (hostname, target_url, redirect_type, append_original_url) VALUES
+  ('dead.com', 'living.com', '301', true),
+  ('old.com', 'new.com', '302', false),
+  ('tired.com', 'wired.com', 'location', false);
 ```
 Create a DNS verification:
 ```sql
-INSERT INTO dns_verifications (redirect_id, code, expiry) values
-  (<redirect_id>, '123e4567-e89b-12d3-a456-426655440000', NOW() + INTERVAL '4 hours');
+INSERT INTO staged_redirects (code, hostname, target_url, redirect_type, append_original_url, expiry) values
+  ('123e4567-e89b-12d3-a456-426655440000', 'rampr.org', 'after-1-1.com', '301', true, NOW() + INTERVAL '4 hours'),
+  ('123e4567-e89b-12d3-a456-426655440001', 'rampr.org', 'after-1-2.com', '301', true, NOW() + INTERVAL '5 hours'),
+  ('123e4567-e89b-12d3-a456-426655440002', 'rampr.org', 'after-1-3.com', '301', true, NOW() + INTERVAL '6 hours'),
+  ('123e4567-e89b-12d3-a456-426655440003', 'rampr.org', 'after-1-4.com', '301', true, NOW() + INTERVAL '7 hours'),
+  ('123e4567-e89b-12d3-a456-426655440004', 'rampr.org', 'after-1-5.com', '301', true, NOW() + INTERVAL '8 hours'),
+  ('123e4567-e89b-12d3-a456-426655440005', 'rampr.org', 'after-1-6.com', '301', true, NOW() + INTERVAL '9 hours'),
+  ('123e4567-e89b-12d3-a456-426655440006', 'dialrup.com', 'after-2-1.com', '301', true, NOW() + INTERVAL '4 hours'),
+  ('123e4567-e89b-12d3-a456-426655440007', 'dialrup.com', 'after-2-2.com', '301', true, NOW() + INTERVAL '5 hours'),
+  ('123e4567-e89b-12d3-a456-426655440008', 'dialrup.com', 'after-2-3.com', '301', true, NOW() + INTERVAL '6 hours'),
+  ('123e4567-e89b-12d3-a456-426655440009', 'redirectr.org', 'after-3-1.com', '301', true, NOW() + INTERVAL '4 hours'),
+  ('123e4567-e89b-12d3-a456-42665544000a', 'redirectr.org', 'after-3-2.com', '301', true, NOW() + INTERVAL '5 hours'),
+  ('123e4567-e89b-12d3-a456-42665544000c', 'dead.com', 'after-5-1.com', '301', true, NOW() + INTERVAL '4 hours'),
+  ('123e4567-e89b-12d3-a456-42665544000d', 'dead.com', 'after-5-2.com', '301', true, NOW() + INTERVAL '5 hours'),
+  ('123e4567-e89b-12d3-a456-42665544000b', 'dialr.org', 'after-4-1.com', '301', true, NOW() + INTERVAL '4 hours');
 ```
 
 Drop the schema and migration history
@@ -33,16 +42,11 @@ Drop the schema and migration history
 DROP TABLE dbchangelog;
 DROP TABLE dns_verifications;
 DROP TABLE redirects;
-DROP TABLE users;
 ```
 
-Recreate rows above, and a few more to boot:
-```sql
-INSERT INTO users (email) VALUES ('poly@andry.com');
-INSERT INTO redirects (user_id, hostname, target_url, redirect_type, append_original_url) VALUES
-  (1, 'dead.com', 'living.com', '301', true),
-  (1, 'old.com', 'new.com', '302', false),
-  (1, 'blog.serotoninsoftware.com', 'lohbihler.wordpress.com', 'location', false);
-INSERT INTO dns_verifications (redirect_id, code, expiry) values
-  (3, '123e4567-e89b-12d3-a456-426655440000', NOW() + INTERVAL '4 hours');
-```
+
+TODO
+====
+- Hit histograms
+- Deactivation of unused redirects
+- Delete inactive redirects

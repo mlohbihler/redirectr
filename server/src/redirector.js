@@ -1,3 +1,6 @@
+/**
+ * Copyright Serotonin Software 2019
+ */
 module.exports = (req, res, next) => {
   const { hostMap } = req.state
 
@@ -7,8 +10,6 @@ module.exports = (req, res, next) => {
   if (colon !== -1) {
     host = host.substring(0, colon)
   }
-
-  console.log(process.env.THIS_HOST)
 
   // Lookup the host in the host map.
   const value = hostMap[host]
@@ -23,6 +24,9 @@ module.exports = (req, res, next) => {
       // Javascript location redirect
       res.send(`<script>location.href='${fullTarget}'</script>`)
     }
+
+    // Write behind the current time to the table
+    req.db.query(`UPDATE redirects SET last_hit = NOW() WHERE hostname = $1`, [host])
   } else {
     next()
   }
