@@ -9,15 +9,15 @@
       need to be able to add a TXT record set to your domain. That's it.
     </p>
     <form @submit.prevent="submitHost" novalidate>
-      <FormText label="Domain name" required type="text" placeholder="The domain name from which to redirect" v-model="domain" autoFocus/>
+      <FormText label="Domain name" type="text" placeholder="The domain name from which to redirect" v-model="domain" autoFocus/>
     </form>
     <Loading v-if="readInProgress" />
     <div v-if="hostInfo" class="hostInfo">
       <div v-if="!hostInfo.active && hostInfo.staged === 0">
-        There is no existing redirect data for {{ hostname }}.
+        There is no existing redirect data for <strong>{{ hostname }}</strong>.
       </div>
       <div v-if="hostInfo.active" class="active-data">
-        <p><strong>Current redirect infomation for {{ hostname }}. <button class="link" @click="refresh">Refresh</button></strong></p>
+        <p><strong>Current redirect infomation for '{{ hostname }}'. <button class="link" @click="refresh">Refresh</button></strong></p>
         <label>Target URL:</label><span>{{ hostInfo.active.targetUrl }}</span><br/>
         <label>Redirect type:</label><span>{{ hostInfo.active.redirectType }}</span><br/>
         <label>Append original path:</label><span>{{ hostInfo.active.appendOriginalUrl }}</span><br/>
@@ -31,12 +31,12 @@
       <div v-if="!uuid" class="stage">
         <p class="emph">
           Complete the form below to stage a new redirect record. After doing so, you will have 10 minutes to add a TXT record to the
-          {{ hostInfo.active.hostname }} domain with the given code for the staged record to be accepted.
+          <strong>{{ hostname }}</strong> domain with the given code for the staged record to be accepted.
         </p>
         <form @submit.prevent="submitStage" novalidate>
-          <FormText label="Target URL" required type="text" placeholder="The URL to which to redirect" v-model="targetUrl" :errorMsg="targetUrlError"/>
-          <FormSelect label="Redirect type" required :options="redirectOpts" v-model="redirectType"/>
-          <FormCheck label="Append original path" required v-model="appendOriginalUrl" placeholder="Apply the URL path from the original request to the redirect"/>
+          <FormText label="Target URL" type="text" placeholder="The URL to which to redirect" v-model="targetUrl" :errorMsg="targetUrlError"/>
+          <FormSelect label="Redirect type" :options="redirectOpts" v-model="redirectType"/>
+          <FormCheck label="Append original path" v-model="appendOriginalUrl" placeholder="Apply the URL path from the original request to the redirect"/>
           <div v-if="errorMessage" class="error-message">{{ errorMessage }}</div>
           <FormButton :disabled="stageInProgress" :class="{ progress: stageInProgress }">Stage redirect</FormButton>
         </form>
@@ -107,13 +107,16 @@ export default {
   },
   methods: {
     submitHost() {
-      this.hostname = this.domain
+      if (!this.domain.trim()) {
+        return
+      }
+      this.hostname = this.domain.trim()
       this.refresh()
     },
     async refresh() {
       if (!this.readInProgress) {
         this.readInProgress = true
-        const result = await get(`/redirects/${this.domain}`)
+        const result = await get(`/redirects/${this.hostname}`)
         this.readInProgress = false
         this.hostInfo = result
       }
