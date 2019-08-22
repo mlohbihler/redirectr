@@ -49,7 +49,7 @@
           finds it (thus proving that you have control of the domain) it will make the matching staged record active.
         </p>
         <p class="emph">
-          Second, you need to point your old domain's 'A' records to point to this service at
+          Second, you need to point your old domain's 'A' record(s) to point to this service at
           <strong><ClipboardCopy :str="thisIp"/></strong>
         </p>
         <p class="emph">
