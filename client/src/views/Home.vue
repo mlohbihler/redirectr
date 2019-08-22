@@ -79,7 +79,7 @@ export default {
   components: { ClipboardCopy, FormButton, FormCheck, FormSelect, FormText, Loading },
   data() {
     return {
-      domain: 'dead.com',
+      domain: '',
       readInProgress: false,
       hostInfo: null,
 
