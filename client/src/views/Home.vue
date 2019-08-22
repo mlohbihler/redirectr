@@ -10,6 +10,10 @@
       to do this, like proprietary solutions in hosting services and the occasional control panel.
       But RedirectR is almost always way simpler, and works no matter what your situation.
     </p>
+    <p>
+      This is open source software. Find the repository at
+      <a href="https://github.com/mlohbihler/redirectr">https://github.com/mlohbihler/redirectr</a>.
+    </p>
     <form @submit.prevent="submitHost" novalidate>
       <FormText label="Domain name" type="text" placeholder="The domain name from which to redirect" v-model="domain" autoFocus/>
     </form>
@@ -39,8 +43,10 @@
           <strong>{{ hostname }}</strong> domain with the given code for the staged record to be accepted.
         </p>
         <form @submit.prevent="submitStage" novalidate>
-          <FormText label="Target URL" type="text" placeholder="The URL to which to redirect" v-model="targetUrl" :errorMsg="targetUrlError"/>
-          <FormSelect label="Redirect type" :options="redirectOpts" v-model="redirectType"/>
+          <FormText label="Target URL" type="text" placeholder="The URL to which to redirect" v-model="targetUrl" :errorMsg="targetUrlError"
+            hint="Enter a full URL. Or just enter the domain name and the protocol (http or https) will be the same as the original request."/>
+          <FormSelect label="Redirect type" :options="redirectOpts" v-model="redirectType"
+            hint="Browsers will store 301 redirects permanently; use this only when you are sure your configuration is correct."/>
           <FormCheck label="Append original path" v-model="appendOriginalUrl" placeholder="Apply the URL path from the original request to the redirect"/>
           <div v-if="errorMessage" class="error-message">{{ errorMessage }}</div>
           <FormButton :disabled="stageInProgress" :class="{ progress: stageInProgress }">Stage redirect</FormButton>
@@ -90,7 +96,7 @@ export default {
 
       hostname: '',
       targetUrl: '',
-      redirectType: '301',
+      redirectType: '302',
       appendOriginalUrl: true,
       stageInProgress: false,
 
@@ -99,8 +105,8 @@ export default {
       uuid: null,
 
       redirectOpts: [
-        { value: '301', label: '301 (Moved permanently - browsers cache this permanently)' },
-        { value: '302', label: '302 (Moved temporarily - browsers don\'t cache this)' },
+        { value: '301', label: '301 (Moved permanently)' },
+        { value: '302', label: '302 (Moved temporarily)' },
         { value: 'location', label: 'Javascript (client-side) redirect' }
       ]
     }
