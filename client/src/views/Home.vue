@@ -57,7 +57,8 @@
         <p class="emph">
           First, within 10 minutes, you need to add a TXT record to your domain with the value
           <strong><ClipboardCopy :str="'redirectr-' + uuid"/></strong>. RedirectR will watch for this record, and once it
-          finds it (thus proving that you have control of the domain) it will make the matching staged record active.
+          finds it (thus proving that you have control of the domain) it will make the matching staged record active. RedirectR
+          will check for changes about once a minute, but it can take a while to find your entries depending on DNS TTL settings.
         </p>
         <p class="emph">
           Second, you need to point your old domain's 'A' record(s) to point to this service at
