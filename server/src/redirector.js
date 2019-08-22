@@ -15,11 +15,11 @@ module.exports = (req, res, next) => {
   const value = hostMap[host]
   if (value) {
     const { target, type, appendOriginalUrl } = value
-    let scheme = ''
+    let protocol = ''
     if (target.indexOf('://') === -1) {
-      scheme = req.scheme + '://'
+      protocol = req.protocol + '://'
     }
-    const fullTarget = scheme + target + (appendOriginalUrl ? req.originalUrl : '')
+    const fullTarget = protocol + target + (appendOriginalUrl ? req.originalUrl : '')
 
     if (type === '301' || type === '302') {
       // Response code redirect
