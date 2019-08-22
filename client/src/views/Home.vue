@@ -14,10 +14,10 @@
     <Loading v-if="readInProgress" />
     <div v-if="hostInfo" class="hostInfo">
       <div v-if="!hostInfo.active && hostInfo.staged === 0">
-        There is no existing redirect data for {{ this.hostname }}.
+        There is no existing redirect data for {{ hostname }}.
       </div>
       <div v-if="hostInfo.active" class="active-data">
-        <p><strong>Current redirect infomation for {{ this.hostname }}. <button class="link" @click="refresh">Refresh</button></strong></p>
+        <p><strong>Current redirect infomation for {{ hostname }}. <button class="link" @click="refresh">Refresh</button></strong></p>
         <label>Target URL:</label><span>{{ hostInfo.active.targetUrl }}</span><br/>
         <label>Redirect type:</label><span>{{ hostInfo.active.redirectType }}</span><br/>
         <label>Append original path:</label><span>{{ hostInfo.active.appendOriginalUrl }}</span><br/>
