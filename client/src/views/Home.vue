@@ -6,7 +6,9 @@
     <h1>Redirect like a champ!</h1>
     <p>
       RedirectR is a service that does 301, 302, or Javascript web page redirects. To use it, you
-      need to be able to add a TXT record set to your domain. That's it.
+      need to be able to add a TXT record set to your domain. That's it. Sure, there are other ways
+      to do this, like proprietary solutions in hosting services and the occasional control panel.
+      But RedirectR is almost always way simpler, and works no matter what your situation.
     </p>
     <form @submit.prevent="submitHost" novalidate>
       <FormText label="Domain name" type="text" placeholder="The domain name from which to redirect" v-model="domain" autoFocus/>
@@ -14,7 +16,7 @@
     <Loading v-if="readInProgress" />
     <div v-if="hostInfo" class="hostInfo">
       <div v-if="!hostInfo.active && hostInfo.staged === 0">
-        There is no existing redirect data for <strong>{{ hostname }}</strong>.
+        There is no existing redirect data for <strong>{{ hostname }}</strong>. <button class="link" @click="refresh">Refresh</button>
       </div>
       <div v-if="hostInfo.active" class="active-data">
         <p><strong>Current redirect infomation for '{{ hostname }}'. <button class="link" @click="refresh">Refresh</button></strong></p>
@@ -25,6 +27,9 @@
         <template v-if="hostInfo.active.lastHit">
           <label>Since last hit:</label><span>{{ sinceLastHit() }}</span><br/>
         </template>
+        <p>If your redirects are not working, ensure that <strong>{{ hostname }}</strong>'s 'A' record(s) point to
+          <strong><ClipboardCopy :str="thisIp"/></strong>
+        </p>
       </div>
       <div v-if="hostInfo.staged === 1">There is <strong>1</strong> staged record.</div>
       <div v-if="hostInfo.staged > 1">There are <strong>{{ hostInfo.staged }}</strong> staged records.</div>
@@ -94,8 +99,8 @@ export default {
       uuid: null,
 
       redirectOpts: [
-        { value: '301', label: '301 (Moved permanently)' },
-        { value: '302', label: '302 (Moved temporarily)' },
+        { value: '301', label: '301 (Moved permanently - browsers cache this permanently)' },
+        { value: '302', label: '302 (Moved temporarily - browsers don\'t cache this)' },
         { value: 'location', label: 'Javascript (client-side) redirect' }
       ]
     }
