@@ -34,7 +34,8 @@ export default {
   computed: {
     copiedStyles() {
       if (!this.copiedState) {
-        // This is the default state, sort of. While 
+        // This is the default state, sort of. While the copied state is null, the element is displayed, but just
+        // long enough to get is position.
         return {
           display: this.copiedState === null ? 'inherit' : 'none',
           opacity: 1,
